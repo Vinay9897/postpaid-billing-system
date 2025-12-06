@@ -1,5 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import './App.css'
+import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
 
 function App() {
   return (
@@ -41,24 +43,6 @@ function HomePage() {
       <p>Step 0: Project Setup Complete</p>
       <p>Backend API available at <code>http://localhost:8080</code></p>
       <p>Frontend running at <code>http://localhost:3000</code></p>
-    </div>
-  )
-}
-
-function LoginPage() {
-  return (
-    <div className="page">
-      <h2>Login</h2>
-      <p>Login endpoint will be available in Step 1</p>
-    </div>
-  )
-}
-
-function RegisterPage() {
-  return (
-    <div className="page">
-      <h2>Register</h2>
-      <p>Registration endpoint will be available in Step 1</p>
     </div>
   )
 }

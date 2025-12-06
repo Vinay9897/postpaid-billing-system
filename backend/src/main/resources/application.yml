@@ -19,7 +19,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/postpaid_billing_db
     username: postgres
-    password: postgres
+    password: root
     driver-class-name: org.postgresql.Driver
 
   flyway:
@@ -39,3 +39,9 @@ logging:
     org.springframework.security: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+app:
+  jwt:
+    private-key: keystore/private.pem
+    public-key: keystore/public.pem
+    expires-minutes: 15
