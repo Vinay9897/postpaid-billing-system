@@ -1,5 +1,11 @@
 MASTER PROMPT — Generate Postpaid Billing System (frontend + backend) in multiple steps
 
+ Backend Application Path
+ C:\workspace\postpaid-billing-system\backend
+
+ Frontend Application Path
+  C:\workspace\postpaid-billing-system\frontend
+
 REFERENCE (authoritative): /mnt/data/ABC Telecom_ Postpaid Billing System.pdf. :contentReference[oaicite:1]{index=1}
 
 OVERALL RULES (must be obeyed)

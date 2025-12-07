@@ -70,6 +70,8 @@ public class JwtProvider {
         Map<String, Object> payload = new HashMap<>();
         payload.put("sub", String.valueOf(user.getUserId()));
         payload.put("role", user.getRole());
+        payload.put("username", user.getUsername());
+        payload.put("email", user.getEmail());
         payload.put("iat", now.getEpochSecond());
         payload.put("exp", exp.getEpochSecond());
 

@@ -1,23 +1,23 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom'
 import './App.css'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import DashboardPage from './pages/DashboardPage'
+import ProtectedRoute from './components/ProtectedRoute'
+import { useAuth } from './hooks/useAuth'
+import AdminUsersPage from './pages/AdminUsersPage'
+import AdminCreateUserPage from './pages/AdminCreateUserPage'
+import AdminEditUserPage from './pages/AdminEditUserPage'
+import { AdminRoute } from './components/ProtectedRoute'
 
 function App() {
   return (
     <Router>
       <div className="app">
-        <header className="app-header">
-          <h1>Postpaid Billing System</h1>
-          <p>ABC Telecom Customer Portal</p>
-        </header>
-        
+        <Header />
+
         <nav className="app-nav">
-          <ul>
-            <li><a href="/">Home</a></li>
-            <li><a href="/login">Login</a></li>
-            <li><a href="/register">Register</a></li>
-          </ul>
+          <Navigation />
         </nav>
 
         <main className="app-main">
@@ -25,6 +25,38 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/users"
+              element={
+                <AdminRoute>
+                  <AdminUsersPage />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/users/new"
+              element={
+                <AdminRoute>
+                  <AdminCreateUserPage />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/users/:id/edit"
+              element={
+                <AdminRoute>
+                  <AdminEditUserPage />
+                </AdminRoute>
+              }
+            />
           </Routes>
         </main>
 
@@ -36,13 +68,73 @@ function App() {
   )
 }
 
+function Header() {
+  const { isAuthenticated, user, logout } = useAuth()
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    logout()
+    navigate('/')
+  }
+
+  return (
+    <header className="app-header">
+      <h1>Postpaid Billing System</h1>
+      <p>ABC Telecom Customer Portal</p>
+      {isAuthenticated && (
+        <div className="user-info">
+          <span>Welcome, {user?.username}</span>
+          <button onClick={handleLogout} className="logout-btn">Logout</button>
+        </div>
+      )}
+    </header>
+  )
+}
+
+function Navigation() {
+  const { isAuthenticated } = useAuth()
+  const { user } = useAuth()
+
+  return (
+    <ul>
+      <li><a href="/">Home</a></li>
+      {!isAuthenticated ? (
+        <>
+          <li><a href="/login">Login</a></li>
+          <li><a href="/register">Register</a></li>
+        </>
+      ) : (
+        <>
+          <li><a href="/dashboard">Dashboard</a></li>
+          {user?.role?.toUpperCase() === 'ADMIN' && <li><a href="/admin/users">Manage Users</a></li>}
+          <li><a href="/customers">Customers</a></li>
+          <li><a href="/services">Services</a></li>
+          <li><a href="/billing">Billing</a></li>
+        </>
+      )}
+    </ul>
+  )
+}
+
 function HomePage() {
+  const { isAuthenticated, user } = useAuth()
+
   return (
     <div className="page">
       <h2>Welcome to Postpaid Billing System</h2>
-      <p>Step 0: Project Setup Complete</p>
-      <p>Backend API available at <code>http://localhost:8080</code></p>
-      <p>Frontend running at <code>http://localhost:3000</code></p>
+      {isAuthenticated ? (
+        <div>
+          <p>Hello, {user?.username}! You are logged in.</p>
+          <p><a href="/dashboard">Go to Dashboard</a></p>
+        </div>
+      ) : (
+        <div>
+          <p>Step 0: Project Setup Complete</p>
+          <p>Backend API available at <code>http://localhost:8080</code></p>
+          <p>Frontend running at <code>http://localhost:5173</code></p>
+          <p><a href="/login">Login</a> or <a href="/register">Register</a> to continue</p>
+        </div>
+      )}
     </div>
   )
 }
