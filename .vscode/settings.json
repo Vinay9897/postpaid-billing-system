@@ -1,0 +1,7 @@
+{
+  "coverageHighlight.autoEnable": true,
+  "coverageHighlight.coverageFiles": [
+    "target/site/jacoco/jacoco.xml",
+    "coverage/lcov.info"
+  ]
+}

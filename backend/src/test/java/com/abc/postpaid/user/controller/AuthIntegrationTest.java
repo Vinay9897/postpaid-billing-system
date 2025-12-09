@@ -16,6 +16,10 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.abc.postpaid.customer.repository.CustomerRepository;
+import com.abc.postpaid.customer.entity.Customer;
+import com.abc.postpaid.user.repository.UserRepository;
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
 public class AuthIntegrationTest {
@@ -25,6 +29,12 @@ public class AuthIntegrationTest {
 
     @Autowired
     private TestRestTemplate restTemplate;
+
+    @Autowired
+    private CustomerRepository customerRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Test
     void registerAndLogin_endToEnd() {
@@ -48,5 +58,29 @@ public class AuthIntegrationTest {
 
         String token = (String) loginResp.getBody().get("accessToken");
         assertThat(token).isNotBlank();
+    }
+
+    @Test
+    void register_createsUserAndCustomer_linked() {
+        String base = "http://localhost:" + port;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        String registerJson = "{\"username\":\"itest-user2\",\"email\":\"itest2@example.com\",\"password\":\"P@ssw0rd!\",\"full_name\":\"Integration Test\",\"phone_number\":\"+15550001111\"}";
+        ResponseEntity<Map> regResp = restTemplate.postForEntity(base + "/api/register", new HttpEntity<>(registerJson, headers), Map.class);
+
+        assertThat(regResp.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(regResp.getBody()).containsKey("user_id");
+
+        Number userIdNum = (Number) regResp.getBody().get("user_id");
+        Long userId = userIdNum.longValue();
+
+        // verify user exists
+        assertThat(userRepository.findById(userId)).isPresent();
+
+        // verify customer exists and is linked to the created user
+        boolean found = customerRepository.findAll().stream().anyMatch(c -> c.getUser() != null && c.getUser().getUserId().equals(userId));
+        assertThat(found).isTrue();
     }
 }

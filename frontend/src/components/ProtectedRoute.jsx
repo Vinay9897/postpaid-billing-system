@@ -1,6 +1,7 @@
 import { Navigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { decodeToken } from '../utils/jwtDecode'
+import { hasRole } from '../utils/roleUtils'
 
 export default function ProtectedRoute({ children }) {
   const token = useAuthStore((state) => state.token)
@@ -22,15 +23,15 @@ export function AdminRoute({ children }) {
   }
 
   // Determine role: prefer store user, fall back to decoding token
-  let role = user?.role
-  if (!role && token) {
+  // Prefer normalized role from user in store
+  if (user?.role && String(user.role).toUpperCase() === 'ADMIN') return children
+
+  if (token) {
     const decoded = decodeToken(token)
-    role = decoded?.role || decoded?.ROLE || decoded?.roleName || decoded?.sub && null
+    if (hasRole(decoded, 'ADMIN')) return children
   }
 
-  if (role?.toUpperCase() !== 'ADMIN') {
-    return <Navigate to="/dashboard" replace />
-  }
+  return <Navigate to="/dashboard" replace />
 
   return children
 }

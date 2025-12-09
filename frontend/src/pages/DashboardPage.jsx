@@ -24,12 +24,12 @@ export default function DashboardPage() {
 
       <div className="navigation-links">
         <h3>Quick Links</h3>
-        <ul>
+        {/* <ul>
           <li><a href="/customers">View Customers</a></li>
           <li><a href="/services">View Services</a></li>
           <li><a href="/billing">View Billing</a></li>
           <li><a href="/payments">View Payments</a></li>
-        </ul>
+        </ul> */}
       </div>
     </div>
   )

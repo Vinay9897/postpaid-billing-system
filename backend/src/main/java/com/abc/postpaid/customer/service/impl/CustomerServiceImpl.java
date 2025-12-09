@@ -54,6 +54,18 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
+    public CustomerResponse getCustomerByUserId(Long userId){
+        Customer c = customerRepository.findByUserUserId(userId).orElseThrow(() -> new IllegalArgumentException("not_found"));
+        CustomerResponse r = new CustomerResponse();
+        r.setCustomerId(c.getCustomerId());
+        r.setUserId(c.getUser() != null ? c.getUser().getUserId() : null);
+        r.setFullName(c.getFullName());
+        r.setAddress(c.getAddress());
+        r.setPhoneNumber(c.getPhoneNumber());
+        return r;
+    }
+
+    @Override
     public List<CustomerResponse> listCustomers() {
         return customerRepository.findAll().stream().map(c -> {
             CustomerResponse r = new CustomerResponse();

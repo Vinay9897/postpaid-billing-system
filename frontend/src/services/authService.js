@@ -3,9 +3,12 @@ import { decodeToken } from '../utils/jwtDecode'
 
 const api = axios.create({ baseURL: '/api' })
 
-export const register = async ({ username, email, password }) => {
+export const register = async ({ username, email, password, full_name, phone_number }) => {
   try {
-    const resp = await api.post('/register', { username, email, password })
+    const payload = { username, email, password }
+    if (full_name) payload.full_name = full_name
+    if (phone_number) payload.phone_number = phone_number
+    const resp = await api.post('/register', payload)
     return resp.data
   } catch (err) {
     throw err.response?.data?.message || 'Registration failed'

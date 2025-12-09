@@ -6,6 +6,8 @@ import com.abc.postpaid.user.dto.RegisterRequest;
 import com.abc.postpaid.user.entity.User;
 import com.abc.postpaid.user.repository.UserRepository;
 import com.abc.postpaid.user.service.AuthService;
+import com.abc.postpaid.customer.entity.Customer;
+import com.abc.postpaid.customer.repository.CustomerRepository;
 import com.abc.postpaid.security.JwtProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,6 +28,9 @@ public class AuthServiceImpl implements AuthService {
     @Autowired
     private JwtProvider jwtProvider;
 
+    @Autowired
+    private CustomerRepository customerRepository;
+
     @Override
     @Transactional
     public Long register(RegisterRequest request) {
@@ -42,6 +47,14 @@ public class AuthServiceImpl implements AuthService {
     user.setRole("customer");
     user.setCreatedAt(OffsetDateTime.now());
         User saved = userRepository.save(user);
+        // Create linked customer record (progressive profiling)
+        Customer customer = new Customer();
+        customer.setUser(saved);
+        // Use provided profile fields if present
+        customer.setFullName(request.getFullName() != null ? request.getFullName() : "");
+        customer.setPhoneNumber(request.getPhoneNumber() != null ? request.getPhoneNumber() : "");
+        customer.setAddress(null);
+        customerRepository.save(customer);
         return saved.getUserId();
     }
 

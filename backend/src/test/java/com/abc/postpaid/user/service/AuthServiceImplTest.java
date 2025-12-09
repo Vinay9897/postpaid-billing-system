@@ -22,11 +22,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import com.abc.postpaid.customer.entity.Customer;
+
 @ExtendWith(MockitoExtension.class)
 public class AuthServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
+    
+    @Mock
+    private com.abc.postpaid.customer.repository.CustomerRepository customerRepository;
 
     private JwtProvider jwtProvider = new JwtProvider() {
         @Override
@@ -59,6 +64,10 @@ public class AuthServiceImplTest {
         java.lang.reflect.Field f3 = AuthServiceImpl.class.getDeclaredField("jwtProvider");
         f3.setAccessible(true);
         f3.set(authService, jwtProvider);
+
+    java.lang.reflect.Field f4 = AuthServiceImpl.class.getDeclaredField("customerRepository");
+    f4.setAccessible(true);
+    f4.set(authService, customerRepository);
     }
 
     @Test
@@ -70,6 +79,11 @@ public class AuthServiceImplTest {
         saved.setUserId(123L);
         saved.setUsername("alice");
         when(userRepository.save(any(User.class))).thenReturn(saved);
+        when(customerRepository.save(any(Customer.class))).thenAnswer(invocation -> {
+            Customer c = invocation.getArgument(0);
+            c.setCustomerId(555L);
+            return c;
+        });
 
         RegisterRequest req = new RegisterRequest();
         req.setUsername("alice");
@@ -86,6 +100,51 @@ public class AuthServiceImplTest {
         assertThat(captured.getUsername()).isEqualTo("alice");
         // password should be hashed
         assertThat(passwordEncoder.matches("Secret123!", captured.getPasswordHash())).isTrue();
+
+        // verify customer was created and linked to the saved user
+        ArgumentCaptor<Customer> custCaptor = ArgumentCaptor.forClass(Customer.class);
+        verify(customerRepository, times(1)).save(custCaptor.capture());
+        Customer savedCust = custCaptor.getValue();
+        assertThat(savedCust.getUser()).isNotNull();
+        assertThat(savedCust.getUser().getUserId()).isEqualTo(123L);
+        // since RegisterRequest did not include profile fields, backend sets them to empty string
+        assertThat(savedCust.getFullName()).isEqualTo("");
+        assertThat(savedCust.getPhoneNumber()).isEqualTo("");
+    }
+
+    @Test
+    void register_withProfile_shouldCreateCustomerWithProfileFields() {
+        when(userRepository.existsByUsername("carol")).thenReturn(false);
+        when(userRepository.existsByEmail("carol@example.com")).thenReturn(false);
+
+        User saved = new User();
+        saved.setUserId(222L);
+        saved.setUsername("carol");
+        when(userRepository.save(any(User.class))).thenReturn(saved);
+
+        when(customerRepository.save(any(Customer.class))).thenAnswer(invocation -> {
+            Customer c = invocation.getArgument(0);
+            c.setCustomerId(777L);
+            return c;
+        });
+
+        RegisterRequest req = new RegisterRequest();
+        req.setUsername("carol");
+        req.setEmail("carol@example.com");
+        req.setPassword("Secret123!");
+        req.setFullName("Carol User");
+        req.setPhoneNumber("+15551239876");
+
+        long id = authService.register(req);
+        assertThat(id).isEqualTo(222L);
+
+        ArgumentCaptor<Customer> custCaptor = ArgumentCaptor.forClass(Customer.class);
+        verify(customerRepository, times(1)).save(custCaptor.capture());
+        Customer savedCust = custCaptor.getValue();
+        assertThat(savedCust.getUser()).isNotNull();
+        assertThat(savedCust.getUser().getUserId()).isEqualTo(222L);
+        assertThat(savedCust.getFullName()).isEqualTo("Carol User");
+        assertThat(savedCust.getPhoneNumber()).isEqualTo("+15551239876");
     }
 
     @Test

@@ -9,6 +9,7 @@ import AdminUsersPage from './pages/AdminUsersPage'
 import AdminCreateUserPage from './pages/AdminCreateUserPage'
 import AdminEditUserPage from './pages/AdminEditUserPage'
 import { AdminRoute } from './components/ProtectedRoute'
+import CustomerProfilePage from './pages/CustomerProfilePage'
 
 function App() {
   return (
@@ -57,6 +58,22 @@ function App() {
                 </AdminRoute>
               }
             />
+            <Route
+              path="/customers/:id"
+              element={
+                <ProtectedRoute>
+                  <CustomerProfilePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/customers/me"
+              element={
+                <ProtectedRoute>
+                  <CustomerProfilePage me={true} />
+                </ProtectedRoute>
+              }
+            />
           </Routes>
         </main>
 
@@ -92,8 +109,7 @@ function Header() {
 }
 
 function Navigation() {
-  const { isAuthenticated } = useAuth()
-  const { user } = useAuth()
+  const { isAuthenticated, user } = useAuth()
 
   return (
     <ul>
@@ -107,7 +123,8 @@ function Navigation() {
         <>
           <li><a href="/dashboard">Dashboard</a></li>
           {user?.role?.toUpperCase() === 'ADMIN' && <li><a href="/admin/users">Manage Users</a></li>}
-          <li><a href="/customers">Customers</a></li>
+          {/* Link to current user's profile (uses /customers/me) */}
+          <li><a href="/customers/me">Customers</a></li>
           <li><a href="/services">Services</a></li>
           <li><a href="/billing">Billing</a></li>
         </>
@@ -131,8 +148,8 @@ function HomePage() {
         <div>
           <p>Step 0: Project Setup Complete</p>
           <p>Backend API available at <code>http://localhost:8080</code></p>
-          <p>Frontend running at <code>http://localhost:5173</code></p>
-          <p><a href="/login">Login</a> or <a href="/register">Register</a> to continue</p>
+          <p>Frontend running at <code>http://localhost:3000</code></p>
+          {/* <p><a href="/login">Login</a> or <a href="/register">Register</a> to continue</p> */}
         </div>
       )}
     </div>

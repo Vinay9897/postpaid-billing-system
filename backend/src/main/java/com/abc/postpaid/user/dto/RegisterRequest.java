@@ -1,9 +1,18 @@
 package com.abc.postpaid.user.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class RegisterRequest {
     private String username;
     private String email;
     private String password;
+
+    // Progressive profiling fields
+    @JsonProperty("full_name")
+    private String fullName;
+
+    @JsonProperty("phone_number")
+    private String phoneNumber;
 
     public RegisterRequest() {}
 
@@ -15,4 +24,10 @@ public class RegisterRequest {
 
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
+
+    public String getFullName() { return fullName; }
+    public void setFullName(String fullName) { this.fullName = fullName; }
+
+    public String getPhoneNumber() { return phoneNumber; }
+    public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
 }
