@@ -34,7 +34,9 @@ export const getUser = async (userId) => {
 }
 
 // Create new user
+
 export const createUser = async ({ username, email, password, role }) => {
+  debugger
   try {
     const api = getApi()
     const resp = await api.post('/admin/users', {

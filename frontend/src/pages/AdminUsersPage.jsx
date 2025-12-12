@@ -65,8 +65,6 @@ export default function AdminUsersPage() {
     switch (upperRole) {
       case 'ADMIN':
         return 'badge-admin'
-      case 'SUPPORT':
-        return 'badge-support'
       case 'CUSTOMER':
         return 'badge-customer'
       default:

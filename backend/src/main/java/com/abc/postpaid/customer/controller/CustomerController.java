@@ -10,8 +10,10 @@ import org.springframework.security.core.Authentication;
 
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import com.abc.postpaid.customer.dto.ServiceResponse;
 
 import java.util.Collection;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/customers")
@@ -84,5 +86,20 @@ public class CustomerController {
         }
         customerService.deleteCustomer(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/services")
+    public ResponseEntity<List<ServiceResponse>> listServicesForOwner(@PathVariable Long id) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Long authUserId = getAuthUserId(auth);
+        if (authUserId == null) return ResponseEntity.status(401).build();
+
+        CustomerResponse existing = customerService.getCustomer(id);
+        if (existing == null) return ResponseEntity.status(404).build();
+        if (!authUserId.equals(existing.getUserId())) {
+            return ResponseEntity.status(403).build();
+        }
+
+        return ResponseEntity.ok(customerService.listServicesForCustomer(id));
     }
 }

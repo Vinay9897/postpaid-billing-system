@@ -1,7 +1,12 @@
 package com.abc.postpaid.customer.entity;
 
 import jakarta.persistence.*;
+
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.abc.postpaid.billing.entity.UsageRecord;
 
 @Entity
 @Table(name = "services")
@@ -25,6 +30,9 @@ public class ServiceEntity {
     @Column(name = "status", nullable = false)
     private String status;
 
+    @OneToMany(mappedBy = "service", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<UsageRecord> usageRecords = new ArrayList<>();
+
     public ServiceEntity() {}
 
     public Long getServiceId() { return serviceId; }
@@ -41,4 +49,7 @@ public class ServiceEntity {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public List<UsageRecord> getUsageRecords() { return usageRecords; }
+    public void setUsageRecords(List<UsageRecord> usageRecords) { this.usageRecords = usageRecords; }
 }
