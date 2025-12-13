@@ -22,8 +22,6 @@ public class CustomerController {
     @Autowired
     private CustomerService customerService;
 
-
-
     private Long getAuthUserId(Authentication auth) {
         if (auth == null || auth.getPrincipal() == null) return null;
         try {
@@ -44,18 +42,6 @@ public class CustomerController {
             return ResponseEntity.ok(resp);
         }
         return ResponseEntity.status(403).build();
-    }
-
-    @GetMapping("/me")
-    public ResponseEntity<CustomerResponse> getMyCustomer() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        Long authUserId = getAuthUserId(auth);
-        if (authUserId == null) return ResponseEntity.status(401).build();
-        try {CustomerResponse resp = customerService.getCustomerByUserId(authUserId);
-            return ResponseEntity.ok(resp);
-        } catch (IllegalArgumentException ex) {
-            return ResponseEntity.status(404).build();
-        }
     }
 
     @PutMapping("/{id}")

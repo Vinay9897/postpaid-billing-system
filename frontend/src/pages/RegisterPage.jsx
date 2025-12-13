@@ -27,8 +27,6 @@ export default function RegisterPage() {
         username: data.username,
         email: data.email,
         password: data.password,
-        full_name: data.full_name,
-        phone_number: data.phone_number,
       })
       reset()
       navigate('/login')
@@ -92,21 +90,21 @@ export default function RegisterPage() {
           {errors.confirmPassword && <span className="error">{errors.confirmPassword.message}</span>}
         </div>
 
-        <div className="form-group">
+        {/* <div className="form-group">
           <label>Full name</label>
           <input
             {...register('full_name', { required: 'Full name is required', minLength: { value: 2, message: 'Enter your full name' } })}
           />
           {errors.full_name && <span className="error">{errors.full_name.message}</span>}
-        </div>
+        </div> */}
 
-        <div className="form-group">
+        {/* <div className="form-group">
           <label>Phone number</label>
           <input
             {...register('phone_number', { required: 'Phone number is required' })}
           />
           {errors.phone_number && <span className="error">{errors.phone_number.message}</span>}
-        </div>
+        </div> */}
 
         <button type="submit" disabled={isLoading}>
           {isLoading ? 'Registering...' : 'Register'}

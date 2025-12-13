@@ -124,7 +124,6 @@ export default function AdminCreateUserPage() {
             })}
           >
             <option value="CUSTOMER">Customer</option>
-            <option value="SUPPORT">Support</option>
             <option value="ADMIN">Admin</option>
           </select>
           {errors.role && <span className="error">{errors.role.message}</span>}

@@ -4,7 +4,7 @@ import { useAuthStore } from '../store/authStore'
 const getApi = () => {
   const token = useAuthStore.getState().token
   return axios.create({
-    baseURL: '/api',
+    baseURL: '/api/users',
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -15,7 +15,7 @@ const getApi = () => {
 export const listUsers = async () => {
   try {
     const api = getApi()
-    const resp = await api.get('/admin/users')
+    const resp = await api.get()
     return resp.data
   } catch (err) {
     throw err.response?.data?.message || 'Failed to fetch users'
@@ -26,7 +26,7 @@ export const listUsers = async () => {
 export const getUser = async (userId) => {
   try {
     const api = getApi()
-    const resp = await api.get(`/admin/users/${userId}`)
+    const resp = await api.get(`/${userId}`)
     return resp.data
   } catch (err) {
     throw err.response?.data?.message || 'Failed to fetch user'
@@ -39,7 +39,7 @@ export const createUser = async ({ username, email, password, role }) => {
   debugger
   try {
     const api = getApi()
-    const resp = await api.post('/admin/users', {
+    const resp = await api.post('', {
       username,
       email,
       password,
@@ -55,7 +55,7 @@ export const createUser = async ({ username, email, password, role }) => {
 export const updateUser = async (userId, { email, role }) => {
   try {
     const api = getApi()
-    const resp = await api.put(`/admin/users/${userId}`, {
+    const resp = await api.put(`/${userId}`, {
       email,
       role,
     })
@@ -69,7 +69,7 @@ export const updateUser = async (userId, { email, role }) => {
 export const setPassword = async (userId, { password }) => {
   try {
     const api = getApi()
-    const resp = await api.post(`/admin/users/${userId}/password`, {
+    const resp = await api.post(`/${userId}/password`, {
       password,
     })
     return resp.data
@@ -82,7 +82,7 @@ export const setPassword = async (userId, { password }) => {
 export const deleteUser = async (userId) => {
   try {
     const api = getApi()
-    const resp = await api.delete(`/admin/users/${userId}`)
+    const resp = await api.delete(`/${userId}`)
     return resp.data
   } catch (err) {
     throw err.response?.data?.message || 'Failed to delete user'

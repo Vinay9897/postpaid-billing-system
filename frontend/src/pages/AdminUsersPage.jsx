@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { listUsers, deleteUser } from '../services/adminService'
+import { listCustomersAdmin, createCustomerAdmin } from '../services/adminCustomersService'
 import { useAuth } from '../hooks/useAuth'
 
 export default function AdminUsersPage() {
@@ -57,6 +58,33 @@ export default function AdminUsersPage() {
     } catch (err) {
       setError(typeof err === 'string' ? err : 'Failed to delete user')
       setDeleteConfirm(null)
+    }
+  }
+
+  const handleServices = async (user) => {
+    try {
+      setLoading(true)
+      setError('')
+      const customers = await listCustomersAdmin()
+      const cust = customers.find(c => (c.userId ?? c.user_id) === (user.userId ?? user.user_id))
+      let cid
+      if (!cust) {
+        // create a customer for this user (use username as fullName)
+        try {
+          const resp = await createCustomerAdmin({ userId: user.userId ?? user.user_id, fullName: user.username ?? user.username })
+          cid = resp.customer_id ?? resp.customerId
+        } catch (createErr) {
+          setError(typeof createErr === 'string' ? createErr : 'Failed to create customer for user')
+          return
+        }
+      } else {
+        cid = cust.customerId ?? cust.customer_id
+      }
+      navigate(`/admin/customers/${cid}/services`)
+    } catch (err) {
+      setError(typeof err === 'string' ? err : 'Failed to locate customer')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -124,7 +152,7 @@ export default function AdminUsersPage() {
                     </span>
                   </td>
                   <td>{new Date(u.createdAt).toLocaleDateString()}</td>
-                  <td className="actions-cell">
+                    <td className="actions-cell">
                     <button
                       className="btn-small btn-edit"
                       onClick={() => navigate(`/admin/users/${u.userId}/edit`)}
@@ -132,6 +160,13 @@ export default function AdminUsersPage() {
                     >
                       Edit
                     </button>
+                      <button
+                        className="btn-small btn-primary"
+                        onClick={() => handleServices(u)}
+                        title="Manage services for this user's customer"
+                      >
+                        Services
+                      </button>
                     <button
                       className="btn-small btn-delete"
                       onClick={() => setDeleteConfirm(u)}
