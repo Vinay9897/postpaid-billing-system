@@ -1,4 +1,3 @@
-import { useAuthStore } from '../store/authStore'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
 
@@ -7,16 +6,37 @@ function authHeaders() {
   return token ? { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' }
 }
 
-export async function getCustomer(id) {
-  const res = await fetch(`${API_BASE}/api/customers/${id}`, { headers: authHeaders() })
+export async function getCustomer(userId) {
+  const res = await fetch(`${API_BASE}/api/customers/${userId}`, { headers: authHeaders() })
   if (!res.ok) throw new Error(`Failed to fetch customer: ${res.status}`)
   return res.json()
 }
 
-export async function getMyCustomer() {
-  const res = await fetch(`${API_BASE}/api/customers/me`, { headers: authHeaders() })
-  if (!res.ok) throw new Error(`Failed to fetch my customer: ${res.status}`)
+export async function resolveCustomerForUser(user) {
+  try {
+    return await getCustomer(user.id)
+  } catch (err) {
+    return null
+  }
+}
+
+export async function listServicesForCustomer(customerId) {
+  const res = await fetch(`${API_BASE}/api/customers/${customerId}/services`, { headers: authHeaders() })
+  if (!res.ok) throw new Error(`Failed to fetch services: ${res.status}`)
   return res.json()
+}
+
+// Convenience helper: resolve current user's customer record then return its services.
+export async function getCurrentCustomerServices() {
+  try {
+    const cust = await getMyCustomer()
+    if (!cust) return []
+    const cid = cust.customerId
+    if (!cid) return []
+    return await listServicesForCustomer(cid)
+  } catch (err) {
+    return []
+  }
 }
 
 export async function updateCustomer(id, data) {

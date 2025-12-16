@@ -12,7 +12,7 @@ export const useAuth = () => {
 
   // Ensure user object is populated from token when available (handles page reloads/navigation)
   useEffect(() => {
-    if (token && !user) {
+    if (token && !user) { // explain this line meaning
       const decoded = decodeToken(token)
       if (decoded) {
         const roles = extractRolesFromDecoded(decoded)

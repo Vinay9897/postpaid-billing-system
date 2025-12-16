@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { listInvoicesForCustomer } from '../services/invoiceService'
-import { useAuth } from '../hooks/useAuth'
+import {  useAuth } from '../hooks/useAuth'
+// import { getCustomer } from '../services/customerService'
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState([])
@@ -16,11 +17,11 @@ export default function InvoicesPage() {
     try {
       setLoading(true)
       setError('')
-      // Get customer id from user; backend provides /api/customers/me endpoint
-      const resp = await fetch('/api/customers/me', { headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` } })
-      if (!resp.ok) throw new Error('Failed to get customer')
-      const cust = await resp.json()
-      const data = await listInvoicesForCustomer(cust.customerId)
+      // Resolve customer via canonical owner endpoint
+      const cust = await getCustomer(user.userId)
+      console.log('Resolved customer for invoices:', cust)
+      if (!cust) throw new Error('No customer record found for this account')
+      const data = await listInvoicesForCustomer(cust.customerId ?? cust.customer_id)
       setInvoices(data)
     } catch (err) {
       setError(typeof err === 'string' ? err : err.message || 'Failed to load invoices')

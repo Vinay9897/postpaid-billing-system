@@ -20,7 +20,7 @@ export default function CustomerProfilePage({ me }) {
   useEffect(() => {
     let mounted = true
     setLoading(true)
-    const fetcher = me ? getMyCustomer : () => getCustomer(id)
+    const fetcher = me ? getCustomer : () => getCustomer(id)
     fetcher()
       .then((c) => { if (mounted) setCustomer(c) })
       .catch((err) => { if (mounted) setError(err.message || 'Failed to load') })

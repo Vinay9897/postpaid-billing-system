@@ -1,12 +1,17 @@
 import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { getInvoice } from '../services/invoiceService'
+import { getCurrentCustomerServices } from '../services/customerService'
+import { useAuth } from '../hooks/useAuth'
 
 export default function InvoiceDetailsPage() {
   const { id } = useParams()
   const [invoice, setInvoice] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const { user } = useAuth()
+  const [customer, setCustomer] = useState(null)
+  const [services, setServices] = useState([])
 
   useEffect(() => {
     fetch()
@@ -16,11 +21,19 @@ export default function InvoiceDetailsPage() {
     try {
       setLoading(true)
       setError('')
-      // Get customer id then invoice
-      const resp = await fetch('/api/customers/me', { headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` } })
-      if (!resp.ok) throw new Error('Failed to get customer')
-      const cust = await resp.json()
-      const inv = await getInvoice(cust.customerId, id)
+      // Resolve customer then invoice using canonical /api/customers/me
+      const cust = await getMyCustomer()
+      if (!cust) throw new Error('No customer record found for this account')
+      setCustomer(cust)
+      // load customer services (if any) for current logged-in customer
+      try {
+        const svcs = await getCurrentCustomerServices()
+        setServices(Array.isArray(svcs) ? svcs : [])
+      } catch (e) {
+        setServices([])
+      }
+
+      const inv = await getInvoice(cust.customerId ?? cust.customer_id, id)
       setInvoice(inv)
     } catch (err) {
       setError(typeof err === 'string' ? err : err.message || 'Failed to load invoice')
@@ -31,7 +44,9 @@ export default function InvoiceDetailsPage() {
 
   const downloadPdf = () => {
     // If backend exposes a download endpoint, navigate to it (placeholder)
-    window.open(`/api/customers/me/invoices/${id}/download`, '_blank')
+    const cid = customer?.customerId
+    if (!cid) return
+    window.open(`/api/customers/${cid}/invoices/${id}/download`, '_blank')
   }
 
   if (loading) return <div className="page"><p>Loading invoice...</p></div>
@@ -49,6 +64,16 @@ export default function InvoiceDetailsPage() {
       <div>
         <button className="btn-primary" onClick={downloadPdf}>Download PDF</button>
       </div>
+      <h3>Customer Services</h3>
+      {services && services.length > 0 ? (
+        <ul>
+          {services.map((s) => (
+            <li key={s.serviceId ?? s.id ?? JSON.stringify(s)}>{s.name || s.description || `Service ${s.serviceId ?? s.id}`}</li>
+          ))}
+        </ul>
+      ) : (
+        <p>No services found for this customer</p>
+      )}
       <h3>Line items</h3>
       {/* If invoice has items */}
       {invoice.items && invoice.items.length > 0 ? (

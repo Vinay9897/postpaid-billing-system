@@ -11,6 +11,13 @@
             "name": "Debug app",
             "request": "launch",
             "mainClass": "com.abc.postpaid.PostpaidBillingSystemApplication"
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Launch Chrome against localhost",
+            "url": "http://localhost:3000", // <-- IMPORTANT: Change this port
+            "webRoot": "${workspaceFolder}"
         }
     ]
 }

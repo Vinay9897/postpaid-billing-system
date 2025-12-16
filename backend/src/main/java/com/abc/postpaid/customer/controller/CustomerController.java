@@ -35,7 +35,11 @@ public class CustomerController {
     public ResponseEntity<CustomerResponse> getCustomer(@PathVariable Long id) {
         System.out.println("Debug: Entered getCustomer with id = " + id);
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        CustomerResponse resp = customerService.getCustomer(id);
+        CustomerResponse resp = customerService.getCustomerByUserId(id);
+        if (resp == null) {
+            System.out.println("Debug: No customer found for user ID = " + id);
+            return ResponseEntity.status(404).build();
+        }
         Long authUserId = getAuthUserId(auth);
         System.out.println("Debug: Authenticated user ID = " + authUserId + ", Customer's user ID = " + resp.getUserId());
         if (authUserId != null && authUserId.equals(resp.getUserId())) {
@@ -44,48 +48,21 @@ public class CustomerController {
         return ResponseEntity.status(403).build();
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updateCustomer(@PathVariable Long id, @RequestBody OwnerCustomerUpdateRequest req) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        CustomerResponse existing = customerService.getCustomer(id);
-        Long authUserId = getAuthUserId(auth);
-        if (authUserId == null || !authUserId.equals(existing.getUserId())) {
-            return ResponseEntity.status(403).build();
-        }
-
-        CustomerRequest cr = new CustomerRequest();
-        cr.setUserId(existing.getUserId());
-        if (req.getFullName() != null) cr.setFullName(req.getFullName());
-        if (req.getAddress() != null) cr.setAddress(req.getAddress());
-        if (req.getPhoneNumber() != null) cr.setPhoneNumber(req.getPhoneNumber());
-        customerService.updateCustomer(id, cr);
-        return ResponseEntity.ok().build();
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteCustomer(@PathVariable Long id) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        CustomerResponse existing = customerService.getCustomer(id);
-        Long authUserId = getAuthUserId(auth);
-        if (authUserId == null || !authUserId.equals(existing.getUserId())) {
-            return ResponseEntity.status(403).build();
-        }
-        customerService.deleteCustomer(id);
-        return ResponseEntity.noContent().build();
-    }
+   
 
     @GetMapping("/{id}/services")
-    public ResponseEntity<List<ServiceResponse>> listServicesForOwner(@PathVariable Long id) {
+    public ResponseEntity<List<ServiceResponse>> listServices(@PathVariable Long id) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         Long authUserId = getAuthUserId(auth);
         if (authUserId == null) return ResponseEntity.status(401).build();
 
-        CustomerResponse existing = customerService.getCustomer(id);
+        CustomerResponse existing = customerService.getCustomerByUserId(id);
         if (existing == null) return ResponseEntity.status(404).build();
         if (!authUserId.equals(existing.getUserId())) {
             return ResponseEntity.status(403).build();
         }
 
-        return ResponseEntity.ok(customerService.listServicesForCustomer(id));
+        return ResponseEntity.ok(customerService.listServicesForCustomer(existing.getCustomerId()));
     }
+
 }

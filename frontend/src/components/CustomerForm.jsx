@@ -6,6 +6,7 @@ export default function CustomerForm({ initial, onCancel, onSave }) {
     address: initial?.address || '',
     phoneNumber: initial?.phoneNumber || initial?.phone_number || '',
   })
+  
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
 
