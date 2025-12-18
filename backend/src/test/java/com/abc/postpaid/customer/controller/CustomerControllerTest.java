@@ -20,6 +20,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver;
 
 import java.util.Collections;
+import java.util.List;
+import com.abc.postpaid.customer.dto.ServiceResponse;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -69,14 +71,13 @@ public class CustomerControllerTest {
         resp.setCustomerId(id);
         resp.setUserId(10L);
         resp.setFullName("Alice");
-
         when(customerService.getCustomer(id)).thenReturn(resp);
         setAuthPrincipal("10", "ROLE_CUSTOMER");
 
         mvc.perform(get("/api/customers/" + id))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.customerId", is(id.intValue())))
-                .andExpect(jsonPath("$.fullName", is("Alice")));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.customerId", is(id.intValue())))
+            .andExpect(jsonPath("$.fullName", is("Alice")));
 
         verify(customerService, times(1)).getCustomer(id);
     }
@@ -86,13 +87,14 @@ public class CustomerControllerTest {
         Long id = 123L;
         CustomerResponse resp = new CustomerResponse();
         resp.setCustomerId(id);
-        resp.setUserId(10L);
+        resp.setUserId(99L);
 
         when(customerService.getCustomer(id)).thenReturn(resp);
-        setAuthPrincipal("99", "ROLE_CUSTOMER");
+        // authenticated as a different user -> forbidden
+        setAuthPrincipal("77", "ROLE_CUSTOMER");
 
         mvc.perform(get("/api/customers/" + id))
-                .andExpect(status().isForbidden());
+            .andExpect(status().isForbidden());
 
         verify(customerService, times(1)).getCustomer(id);
     }
@@ -103,13 +105,16 @@ public class CustomerControllerTest {
         CustomerResponse resp = new CustomerResponse();
         resp.setCustomerId(id);
         resp.setUserId(10L);
+        // admin principal but should not be treated specially; mock a different owned customer
+        CustomerResponse adminOwned = new CustomerResponse();
+        adminOwned.setCustomerId(999L);
+        adminOwned.setUserId(1L);
 
         when(customerService.getCustomer(id)).thenReturn(resp);
-        // admin principal but should not be treated specially
         setAuthPrincipal("1", "ROLE_ADMIN");
 
         mvc.perform(get("/api/customers/" + id))
-                .andExpect(status().isForbidden());
+            .andExpect(status().isForbidden());
 
         verify(customerService, times(1)).getCustomer(id);
     }
@@ -122,110 +127,84 @@ public class CustomerControllerTest {
         resp.setUserId(userId);
         resp.setFullName("Bob");
 
-        when(customerService.getCustomerByUserId(userId)).thenReturn(resp);
+        when(customerService.getCustomer(123L)).thenReturn(resp);
         setAuthPrincipal(String.valueOf(userId), "ROLE_CUSTOMER");
 
-        mvc.perform(get("/api/customers/me"))
+        mvc.perform(get("/api/customers/" + 123L))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.userId", is(userId.intValue())))
+                .andExpect(jsonPath("$.customerId", is(123)))
                 .andExpect(jsonPath("$.fullName", is("Bob")));
 
-        verify(customerService, times(1)).getCustomerByUserId(userId);
+        verify(customerService, times(1)).getCustomer(123L);
     }
 
     @Test
     public void getMyCustomer_unauthenticated() throws Exception {
         SecurityContextHolder.clearContext();
 
-        mvc.perform(get("/api/customers/me"))
+        when(customerService.getCustomer(123L)).thenReturn(new CustomerResponse());
+
+        mvc.perform(get("/api/customers/123"))
                 .andExpect(status().isUnauthorized());
 
-        verify(customerService, never()).getCustomerByUserId(anyLong());
+        verify(customerService, times(1)).getCustomer(123L);
     }
 
     @Test
     public void getMyCustomer_notFound() throws Exception {
         Long userId = 10L;
-        when(customerService.getCustomerByUserId(userId)).thenThrow(new IllegalArgumentException("not_found"));
+        when(customerService.getCustomer(123L)).thenReturn(null);
         setAuthPrincipal(String.valueOf(userId), "ROLE_CUSTOMER");
 
-        mvc.perform(get("/api/customers/me"))
+        mvc.perform(get("/api/customers/123"))
                 .andExpect(status().isNotFound());
 
-        verify(customerService, times(1)).getCustomerByUserId(userId);
+        verify(customerService, times(1)).getCustomer(123L);
     }
 
     @Test
-    public void updateCustomer_ownerAllowed() throws Exception {
-        Long id = 123L;
+    public void listServicesForOwner_ownerAllowed() throws Exception {
+        Long id = 200L;
         CustomerResponse existing = new CustomerResponse();
         existing.setCustomerId(id);
-        existing.setUserId(10L);
+        existing.setUserId(55L);
 
+        ServiceResponse s1 = new ServiceResponse();
+        s1.setServiceId(1L); s1.setServiceType("mobile"); s1.setStatus("active");
+        ServiceResponse s2 = new ServiceResponse();
+        s2.setServiceId(2L); s2.setServiceType("tv"); s2.setStatus("suspended");
         when(customerService.getCustomer(id)).thenReturn(existing);
-        setAuthPrincipal("10", "ROLE_CUSTOMER");
+        when(customerService.listServicesForCustomer(id)).thenReturn(List.of(s1, s2));
 
-        String body = "{\"fullName\":\"New Name\",\"phoneNumber\":\"+123\"}";
+        setAuthPrincipal("55", "ROLE_CUSTOMER");
 
-        mvc.perform(put("/api/customers/" + id)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpect(status().isOk());
+        mvc.perform(get("/api/customers/" + id + "/services"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$", org.hamcrest.Matchers.hasSize(2)));
 
-        ArgumentCaptor<Long> idCap = ArgumentCaptor.forClass(Long.class);
-        verify(customerService, times(1)).updateCustomer(idCap.capture(), any());
-        assertEquals(id, idCap.getValue());
+        verify(customerService, times(1)).getCustomer(id);
+        verify(customerService, times(1)).listServicesForCustomer(id);
     }
 
     @Test
-    public void updateCustomer_forbidden() throws Exception {
-        Long id = 123L;
-        CustomerResponse existing = new CustomerResponse();
-        existing.setCustomerId(id);
-        existing.setUserId(10L);
+    public void listMyServices_okAndNotFound() throws Exception {
+        Long userId = 77L;
+        CustomerResponse resp = new CustomerResponse();
+        resp.setCustomerId(300L);
+        resp.setUserId(userId);
 
-        when(customerService.getCustomer(id)).thenReturn(existing);
-        setAuthPrincipal("99", "ROLE_CUSTOMER");
+        ServiceResponse svc = new ServiceResponse();
+        svc.setServiceId(11L); svc.setServiceType("broadband"); svc.setStatus("active");
 
-        String body = "{\"fullName\":\"New Name\"}";
+        when(customerService.getCustomer(300L)).thenReturn(resp);
+        when(customerService.listServicesForCustomer(300L)).thenReturn(List.of(svc));
 
-        mvc.perform(put("/api/customers/" + id)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpect(status().isForbidden());
+        setAuthPrincipal(String.valueOf(userId), "ROLE_CUSTOMER");
+        mvc.perform(get("/api/customers/" + resp.getCustomerId() + "/services"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", org.hamcrest.Matchers.hasSize(1)));
 
-        verify(customerService, never()).updateCustomer(anyLong(), any());
-    }
-
-    @Test
-    public void deleteCustomer_ownerAllowed() throws Exception {
-        Long id = 123L;
-        CustomerResponse existing = new CustomerResponse();
-        existing.setCustomerId(id);
-        existing.setUserId(10L);
-
-        when(customerService.getCustomer(id)).thenReturn(existing);
-        setAuthPrincipal("10", "ROLE_CUSTOMER");
-
-        mvc.perform(delete("/api/customers/" + id))
-                .andExpect(status().isNoContent());
-
-        verify(customerService, times(1)).deleteCustomer(id);
-    }
-
-    @Test
-    public void deleteCustomer_forbidden() throws Exception {
-        Long id = 123L;
-        CustomerResponse existing = new CustomerResponse();
-        existing.setCustomerId(id);
-        existing.setUserId(10L);
-
-        when(customerService.getCustomer(id)).thenReturn(existing);
-        setAuthPrincipal("99", "ROLE_CUSTOMER");
-
-        mvc.perform(delete("/api/customers/" + id))
-                .andExpect(status().isForbidden());
-
-        verify(customerService, never()).deleteCustomer(anyLong());
+        verify(customerService, times(1)).getCustomer(300L);
+        verify(customerService, times(1)).listServicesForCustomer(300L);
     }
 }

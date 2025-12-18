@@ -206,7 +206,6 @@ function HomePage() {
         </div>
       ) : (
         <div>
-          <p>Step 0: Project Setup Complete</p>
           <p>Backend API available at <code>http://localhost:8080</code></p>
           <p>Frontend running at <code>http://localhost:3000</code></p>
           <p><a href="/login">Login</a> or <a href="/register">Register</a> to continue</p>

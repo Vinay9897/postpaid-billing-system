@@ -70,7 +70,7 @@ public class AdminUserControllerIntegrationTest {
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
         ResponseEntity<UserResponse[]> resp = restTemplate.exchange(
-                baseUrl("/api/admin/users"),
+            baseUrl("/api/users"),
                 HttpMethod.GET,
                 entity,
                 UserResponse[].class
@@ -95,7 +95,7 @@ public class AdminUserControllerIntegrationTest {
 
         HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(req), headers);
 
-        ResponseEntity<Map> resp = restTemplate.postForEntity(baseUrl("/api/admin/users"), entity, Map.class);
+        ResponseEntity<Map> resp = restTemplate.postForEntity(baseUrl("/api/users"), entity, Map.class);
 
         assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(resp.getBody()).containsKey("user_id");

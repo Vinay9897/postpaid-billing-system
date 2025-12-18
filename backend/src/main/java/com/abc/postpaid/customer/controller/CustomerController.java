@@ -34,17 +34,20 @@ public class CustomerController {
     @GetMapping("/{id}")
     public ResponseEntity<CustomerResponse> getCustomer(@PathVariable Long id) {
         System.out.println("Debug: Entered getCustomer with id = " + id);
+        // Fetch customer by path id (do not use authenticated user id to fetch)
+        CustomerResponse resp = customerService.getCustomer(id);
+        if (resp == null) return ResponseEntity.status(404).build();
+
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        CustomerResponse resp = customerService.getCustomerByUserId(id);
-        if (resp == null) {
-            System.out.println("Debug: No customer found for user ID = " + id);
-            return ResponseEntity.status(404).build();
-        }
         Long authUserId = getAuthUserId(auth);
-        System.out.println("Debug: Authenticated user ID = " + authUserId + ", Customer's user ID = " + resp.getUserId());
-        if (authUserId != null && authUserId.equals(resp.getUserId())) {
+        if (authUserId == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        if (authUserId.equals(resp.getUserId())) {
             return ResponseEntity.ok(resp);
         }
+
         return ResponseEntity.status(403).build();
     }
 
@@ -52,12 +55,14 @@ public class CustomerController {
 
     @GetMapping("/{id}/services")
     public ResponseEntity<List<ServiceResponse>> listServices(@PathVariable Long id) {
+        // Fetch customer by path id (do not use authenticated user id to fetch)
+        CustomerResponse existing = customerService.getCustomer(id);
+        if (existing == null) return ResponseEntity.status(404).build();
+
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         Long authUserId = getAuthUserId(auth);
         if (authUserId == null) return ResponseEntity.status(401).build();
 
-        CustomerResponse existing = customerService.getCustomerByUserId(id);
-        if (existing == null) return ResponseEntity.status(404).build();
         if (!authUserId.equals(existing.getUserId())) {
             return ResponseEntity.status(403).build();
         }

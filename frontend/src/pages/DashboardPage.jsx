@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
-import { getCustomer,listServicesForCustomer } from '../services/customerService'
+import { getCustomer, listServicesForCustomer } from '../services/customerService'
 import { listInvoicesForCustomer } from '../services/invoiceService'
 
 export default function DashboardPage() {
@@ -17,7 +17,7 @@ export default function DashboardPage() {
       try {
         setLoading(true)
         setError('')
-       if (!user || !user.userId) return
+        if (!user || !user.userId) return
 
         // If user is admin, don't attempt to resolve a customer for them.
         // Show admin navigation instead of customer-specific "not found" errors.
@@ -39,7 +39,9 @@ export default function DashboardPage() {
           return
         }
         setCustomer(cust)
+        console.log('Resolved customerId:',cust.customerId,cust.customer_id)
         const svc = await listServicesForCustomer(cust.customerId ?? cust.customer_id)
+        console.log('Services API response:', svc)
         if (!mounted) return
         setServices(svc)
         const inv = await listInvoicesForCustomer(cust.customerId ?? cust.customer_id)
