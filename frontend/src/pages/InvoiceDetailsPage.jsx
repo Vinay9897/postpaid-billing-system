@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { getInvoice } from '../services/invoiceService'
-import { getCurrentCustomerServices } from '../services/customerService'
+import {getCustomer, getCurrentCustomerServices } from '../services/customerService'
 import { useAuth } from '../hooks/useAuth'
 
 export default function InvoiceDetailsPage() {
@@ -22,7 +22,7 @@ export default function InvoiceDetailsPage() {
       setLoading(true)
       setError('')
       // Resolve customer then invoice using canonical /api/customers/me
-      const cust = await getMyCustomer()
+      const cust = await getCustomer(user.userId)
       if (!cust) throw new Error('No customer record found for this account')
       setCustomer(cust)
       // load customer services (if any) for current logged-in customer

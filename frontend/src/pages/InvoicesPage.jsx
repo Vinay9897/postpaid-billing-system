@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { listInvoicesForCustomer } from '../services/invoiceService'
 import {  useAuth } from '../hooks/useAuth'
-// import { getCustomer } from '../services/customerService'
+import { getCustomer } from '../services/customerService'
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState([])

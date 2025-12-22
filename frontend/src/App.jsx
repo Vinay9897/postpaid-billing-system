@@ -170,14 +170,14 @@ function Navigation() {
       ) : (
         <>
           <li><a href="/dashboard">Dashboard</a></li>
-          {user?.role?.toUpperCase() === 'ADMIN' && (
+          {user?.role?.toUpperCase() === 'ADMIN' ? (
             <>
-              <li><a href="/admin/users">Manage Users</a></li>
-              <li><a href="/admin/customers">Manage Customers</a></li>
+              <li><a href="/admin/users">Manage Customers</a></li>
             </>
+          ) : (
+             <li><a href="/customers/">Customer</a></li>
           )}
-          {/* Link to current user's profile (uses /customers/me) */}
-          <li><a href="/customers/me">Customers</a></li>
+         
           <li><a href="/services">Services</a></li>
           <li><a href="/billing">Billing</a></li>
         </>

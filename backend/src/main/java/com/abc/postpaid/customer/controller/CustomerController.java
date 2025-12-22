@@ -9,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 import com.abc.postpaid.customer.dto.ServiceResponse;
 
@@ -22,6 +24,8 @@ public class CustomerController {
     @Autowired
     private CustomerService customerService;
 
+    private static final Logger log = LoggerFactory.getLogger(CustomerController.class);
+
     private Long getAuthUserId(Authentication auth) {
         if (auth == null || auth.getPrincipal() == null) return null;
         try {
@@ -33,7 +37,7 @@ public class CustomerController {
 
     @GetMapping("/{id}")
     public ResponseEntity<CustomerResponse> getCustomer(@PathVariable Long id) {
-        System.out.println("Debug: Entered getCustomer with id = " + id);
+        log.debug("Entered getCustomer with id = {}", id);
         // Fetch customer by path id (do not use authenticated user id to fetch)
         CustomerResponse resp = customerService.getCustomer(id);
         if (resp == null) return ResponseEntity.status(404).build();

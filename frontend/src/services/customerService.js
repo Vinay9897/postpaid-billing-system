@@ -29,7 +29,7 @@ export async function listServicesForCustomer(customerId) {
 // Convenience helper: resolve current user's customer record then return its services.
 export async function getCurrentCustomerServices() {
   try {
-    const cust = await getMyCustomer()
+    const cust = await getCustomer(user.userId)
     if (!cust) return []
     const cid = cust.customerId
     if (!cid) return []
